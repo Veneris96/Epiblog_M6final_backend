@@ -1,0 +1,29 @@
+GET http://localhost:5050/users
+
+#######
+
+POST http://localhost:5050/users/new HTTP/1.1
+content-type: application/json
+
+{
+    "username": "Veneris",
+    "email": "ven@test.com",
+    "password": "987456321",
+    "role": "admin"
+}
+
+#######
+
+POST http://localhost:5050/users/id HTTP/1.1
+content-type: application/json
+
+{
+    "username": "Mallino",
+    "email": "mally@test.com",
+    "password": "12654987",
+    "role": "user"
+}
+
+#######
+
+DELETE http://localhost:5050/users/647630f44de3a9595cc770ca HTTP/1.1

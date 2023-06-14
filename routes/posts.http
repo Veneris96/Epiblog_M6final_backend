@@ -1,0 +1,35 @@
+GET http://localhost:5050/posts
+
+#######
+
+GET http://localhost:5050/posts/bytitle/post1
+
+#######
+
+POST http://localhost:5050/posts HTTP/1.1
+content-type: application/json
+
+{
+    "title": "Reference post1_02",
+    "img": "https://picsum.photos/1920/1080",
+    "content": "Lorem ipsum dolor sit amet, officia excepteur ex fugiat reprehenderit enim labore culpa sint ad nisi Lorem pariatur mollit ex esse exercitation amet.",
+    "author": "6485f4854710023de998ec5d",
+    "rate": 3
+}
+
+#######
+
+PATCH http://localhost:5050/posts/646bb0c33a75914c60881419 HTTP/1.1
+content-type: application/json
+
+{
+    "title": "modificato",
+    "author": "epicode@epicode.it",
+    "content": "Lorem ipsum dolor sit amet, officia excepteur ex fugiat reprehenderit enim labore culpa sint ad nisi Lorem pariatur mollit ex esse exercitation amet."
+}
+
+#######
+
+DELETE http://localhost:5050/posts/6478e0e099e13c1a5a5a6805 HTTP/1.1
+
+#######
