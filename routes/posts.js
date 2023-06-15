@@ -2,18 +2,22 @@ import { Router } from "express"
 import PostsModel from "../models/posts.js"
 import UsersModel from "../models/users.js"
 import multer from "multer"
+import  {v2 as cloudinary} from "cloudinary"
 import { validationResult } from "express-validator"
 import { CloudinaryStorage } from "multer-storage-cloudinary"
-import cloudinary from "cloudinary"
-cloudinary.config({
-    cloud_name: 'process.env.CLOUDINARY_CLOUD_NAME',
-    api_key: 'process.env.CLOUDINARY_API_KEY',
-    api_secret: 'process.env.CLOUDINARY_API_SECRET'
-});
 import dotenv from 'dotenv'
+
 dotenv.config()
 
-const MAX_FILE_SIZE = 20000000 //(KB)
+cloudinary.config({
+    cloud_name: `${process.env.CLOUDINARY_CLOUD_NAME}`,
+    api_key: `${process.env.CLOUDINARY_API_KEY}`,
+    api_secret: `${process.env.CLOUDINARY_API_SECRET}`,
+});
+
+
+
+const MAX_FILE_SIZE = 20000000 //(KB, circa 20MB)
 
 const posts = Router()
 
@@ -23,7 +27,6 @@ const internalStorage = multer.diskStorage({
         cb(null, "uploads")
     },
     filename: (req, file, cb) => {
-        // console.log(file)
         //metodo per rendere unico ciascun file, per evitare conflitti. Si può fare meglio in altri modi, ma anche questo funziona.
         const fileId = Date.now() + "-" + Math.round(Math.random() * 1E9)
         //ID univoco per singolo file: data odierna + trattino + numero casuale = 27052023-659846847657
@@ -35,12 +38,12 @@ const internalStorage = multer.diskStorage({
 
 const internalUpload = multer({
     storage: internalStorage,
-    limits: { fileSize: MAX_FILE_SIZE }
+    limits: { fileSize: MAX_FILE_SIZE },
     //Questo qui sotto è un filtro opzionale per limitare l'estensione dei files che possono essere caricati
     // fileFilter: (req, file, cb) => {
-    //     if (file.mimetype !== "image/png") {
+    //     if (file.mimetype !== "image/png" || file.mimetype !== "image/jpg" || file.mimetype !== "jpeg") {
     //         cb(null, false)
-    //         return cb(new Error("Only .png files are allowed"))
+    //         return cb(new Error("Only .png, .jpg or jpeg files are allowed"))
     //     }
     // }
 })
@@ -50,13 +53,22 @@ const internalUpload = multer({
 const cloudStorage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
-        folder: "epiBlogImgs",
-        format: async (req, file) => "png",
+        folder: 'postsImages',
+        format: async (req, file) => 'jpeg',
         public_id: (req, file) => file.name
     }
 })
 
-const cloudUpload = multer({ storage: cloudStorage });
+const cloudUpload = multer({
+    storage: cloudStorage,
+    limits: { fileSize: MAX_FILE_SIZE },
+    // fileFilter: (req, file, cb) => {
+    //     if (file.mimetype !== "image/png" || file.mimetype !== "image/jpg" || file.mimetype !== "jpeg") {
+    //         cb(null, false)
+    //         return cb(new Error("Only .png, .jpg or jpeg files are allowed"))
+    //     }
+    // } 
+});
 //Endpoint per upload in cloudinary//
 
 
@@ -131,6 +143,19 @@ posts.post("/post/uploadImg", internalUpload.single("img"), async (req, res) => 
     }
 })
 
+posts.post('/post/cloudUpload', cloudUpload.single('img'), async (req, res) => {
+    try {
+        res.status(200).json({ img: req.file.path })
+    } catch (error) {
+        console.error('Upload fallito: ', error)
+        res.status(500).send({
+            message: 'File upload error',
+            statusCode: 500
+        })
+    }
+})
+
+
 posts.post("/post", async (req, res) => {
     const errors = validationResult(req)
 
@@ -172,21 +197,6 @@ posts.post("/post", async (req, res) => {
         })
     }
 })
-
-posts.post(
-    "/post/cloudUpload",
-    cloudUpload.single("img"),
-    async (req, res) => {
-        try {
-            res.status(200).json({ img: req.file.path });
-        } catch (error) {
-            res.status(500).send({
-                message: "Errore durante la fase di upload",
-                statusCode: 500,
-            });
-        }
-    }
-);
 
 posts.post("/post/cloudUpload", cloudUpload.single("img"), async (req, res) => {
     try {
